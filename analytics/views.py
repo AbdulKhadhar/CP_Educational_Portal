@@ -10,7 +10,7 @@ from datetime import timedelta
 from colleges.models import Student, Department, SPIRecord, Enrollment
 from courses.models import Attendance, Assignment, Submission
 from quizzes.models import QuizAttempt
-from discussions.models import Badge, StudentBadge, Certificate, Discussion
+from discussions.models import Badge, StudentBadge, Certificate, Discussion, PeerGroup, GroupActivity
 
 @login_required
 def analytics_dashboard(request):

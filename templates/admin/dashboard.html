@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - {{ user.college.name }}{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white p-4">
+                    <h2 class="mb-2">Welcome, {{ user.first_name }}! 🎓</h2>
+                    <p class="mb-0">Managing <strong>{{ user.college.name }}</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Departments</h6>
+                            <h2 class="text-primary mb-0">{{ total_departments }}</h2>
+                            <p class="text-muted small mb-0">Active departments</p>
+                        </div>
+                        <div class="text-primary" style="font-size: 3rem; opacity: 0.2;">
+                            <i class="bi bi-building"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card stat-card success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Teachers</h6>
+                            <h2 class="text-success mb-0">{{ total_teachers }}</h2>
+                            <p class="text-muted small mb-0">Faculty members</p>
+                        </div>
+                        <div class="text-success" style="font-size: 3rem; opacity: 0.2;">
+                            <i class="bi bi-person-badge"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card stat-card warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Students</h6>
+                            <h2 class="text-warning mb-0">{{ total_students }}</h2>
+                            <p class="text-muted small mb-0">Enrolled students</p>
+                        </div>
+                        <div class="text-warning" style="font-size: 3rem; opacity: 0.2;">
+                            <i class="bi bi-people"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card stat-card danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Sections</h6>
+                            <h2 class="text-danger mb-0">{{ total_sections }}</h2>
+                            <p class="text-muted small mb-0">Active sections</p>
+                        </div>
+                        <div class="text-danger" style="font-size: 3rem; opacity: 0.2;">
+                            <i class="bi bi-journal-text"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart me-2 text-primary"></i>Department-wise Students</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="departmentChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0"><i class="bi bi-graph-up me-2 text-success"></i>SPI Performance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h3 class="text-success">{{ spi_stats.avg_spi|floatformat:2|default:"N/A" }}</h3>
+                            <p class="text-muted small">Average SPI</p>
+                        </div>
+                        <div class="col-4">
+                            <h3 class="text-primary">{{ spi_stats.high_performers }}</h3>
+                            <p class="text-muted small">High Performers<br>(SPI ≥ 80)</p>
+                        </div>
+                        <div class="col-4">
+                            <h3 class="text-danger">{{ spi_stats.at_risk }}</h3>
+                            <p class="text-muted small">At Risk<br>(SPI < 50)</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'spi_report' %}" class="btn btn-outline-primary w-100 mt-3">
+                        <i class="bi bi-file-text me-2"></i>View Detailed Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content Row -->
+    <div class="row g-4">
+        <!-- Recent Students -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-person-plus me-2 text-primary"></i>Recently Added Students</h5>
+                    <a href="{% url 'student_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_students %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Roll Number</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Semester</th>
+                                    <th>Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in recent_students %}
+                                <tr>
+                                    <td><strong>{{ student.roll_number }}</strong></td>
+                                    <td>{{ student.user.get_full_name }}</td>
+                                    <td>{{ student.department.name }}</td>
+                                    <td><span class="badge bg-info">Sem {{ student.current_semester }}</span></td>
+                                    <td>{{ student.user.date_joined|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                        <p class="text-muted mt-3">No students added recently</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0"><i class="bi bi-lightning me-2 text-warning"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'department_create' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-building me-2"></i>Add Department
+                        </a>
+                        <a href="{% url 'teacher_register' %}" class="btn btn-outline-success">
+                            <i class="bi bi-person-plus me-2"></i>Register Teacher
+                        </a>
+                        <a href="{% url 'student_register' %}" class="btn btn-outline-info">
+                            <i class="bi bi-person-plus-fill me-2"></i>Register Student
+                        </a>
+                        <a href="{% url 'course_list' %}" class="btn btn-outline-warning">
+                            <i class="bi bi-book me-2"></i>Manage Courses
+                        </a>
+                        <a href="{% url 'analytics_dashboard' %}" class="btn btn-outline-danger">
+                            <i class="bi bi-graph-up me-2"></i>View Analytics
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- System Information -->
+            <div class="card">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2 text-info"></i>College Info</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>College:</strong> {{ user.college.name }}</p>
+                    <p class="mb-2"><strong>Code:</strong> {{ user.college.code }}</p>
+                    <p class="mb-2"><strong>Established:</strong> {{ user.college.established_year }}</p>
+                    <p class="mb-2"><strong>Email:</strong> {{ user.college.contact_email }}</p>
+                    <p class="mb-0"><strong>Phone:</strong> {{ user.college.contact_phone }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Department-wise Students Chart
+    const deptData = {{ dept_stats|safe }};
+    const labels = deptData.map(d => d.name);
+    const data = deptData.map(d => d.student_count);
+    
+    const ctx = document.getElementById('departmentChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Number of Students',
+                data: data,
+                backgroundColor: [
+                    'rgba(13, 110, 253, 0.8)',
+                    'rgba(25, 135, 84, 0.8)',
+                    'rgba(255, 193, 7, 0.8)',
+                    'rgba(220, 53, 69, 0.8)',
+                    'rgba(13, 202, 240, 0.8)'
+                ],
+                borderColor: [
+                    'rgb(13, 110, 253)',
+                    'rgb(25, 135, 84)',
+                    'rgb(255, 193, 7)',
+                    'rgb(220, 53, 69)',
+                    'rgb(13, 202, 240)'
+                ],
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+    
+    // Auto-dismiss alerts
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
+    }, 5000);
+</script>
+{% endblock %}
