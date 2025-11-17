@@ -27,7 +27,7 @@ class User(AbstractUser):
     )
     
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    college = models.ForeignKey(College, on_delete=models.CASCADE, related_name='users')
+    college = models.ForeignKey(College, on_delete=models.CASCADE, null=True, blank=True)
     phone = models.CharField(max_length=15, blank=True)
     profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
     date_of_birth = models.DateField(null=True, blank=True)

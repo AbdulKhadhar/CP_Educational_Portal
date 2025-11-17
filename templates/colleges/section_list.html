@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Sections{% endblock %}
+{% block page_title %}Class Section Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-body">
+            {% if sections %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Course</th>
+                            <th>Section</th>
+                            <th>Teacher</th>
+                            <th>Academic Year</th>
+                            <th>Students</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for section in sections %}
+                        <tr>
+                            <td><strong>{{ section.course.code }}</strong> - {{ section.course.name }}</td>
+                            <td><span class="badge bg-primary">{{ section.section_name }}</span></td>
+                            <td>{{ section.teacher.get_full_name }}</td>
+                            <td>{{ section.academic_year }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ section.get_enrolled_count }}/{{ section.max_students }}</span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'course_detail' section.id %}" class="btn btn-sm btn-info">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                <a href="{% url 'section_edit' section.id %}" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'section_delete' section.id %}" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-journal-text" style="font-size: 4rem; color: #ccc;"></i>
+                <p class="text-muted mt-3">No sections found</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

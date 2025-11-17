@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Enrollments{% endblock %}
+{% block page_title %}Student Enrollments{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12 text-end">
+            <a href="{% url 'enrollment_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>New Enrollment
+            </a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            {% if enrollments %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Roll Number</th>
+                            <th>Section</th>
+                            <th>Course</th>
+                            <th>Enrolled Date</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for enrollment in enrollments %}
+                        <tr>
+                            <td>{{ enrollment.student.user.get_full_name }}</td>
+                            <td><strong>{{ enrollment.student.roll_number }}</strong></td>
+                            <td>{{ enrollment.section.section_name }}</td>
+                            <td>{{ enrollment.section.course.name }}</td>
+                            <td>{{ enrollment.enrolled_date|date:"M d, Y" }}</td>
+                            <td>
+                                {% if enrollment.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'enrollment_delete' enrollment.id %}" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-person-check" style="font-size: 4rem; color: #ccc;"></i>
+                <p class="text-muted mt-3">No enrollments found</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

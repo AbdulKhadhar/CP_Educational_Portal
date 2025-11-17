@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ student.user.get_full_name }}{% endblock %}
+{% block page_title %}Student Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Student Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px; font-size: 2rem;">
+                            {{ student.user.first_name.0 }}{{ student.user.last_name.0 }}
+                        </div>
+                        <h5 class="mt-3">{{ student.user.get_full_name }}</h5>
+                        <p class="text-muted">{{ student.roll_number }}</p>
+                    </div>
+                    <hr>
+                    <p><strong>Email:</strong> {{ student.user.email }}</p>
+                    <p><strong>Phone:</strong> {{ student.user.phone }}</p>
+                    <p><strong>Department:</strong> {{ student.department.name }}</p>
+                    <p><strong>Semester:</strong> {{ student.current_semester }}</p>
+                    <p><strong>Admission Year:</strong> {{ student.admission_year }}</p>
+                    <hr>
+                    <p><strong>Guardian:</strong> {{ student.guardian_name }}</p>
+                    <p><strong>Guardian Phone:</strong> {{ student.guardian_phone }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Performance Overview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h2 class="text-primary">{{ spi|floatformat:2 }}</h2>
+                            <p class="text-muted">SPI Score</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h2 class="text-success">{{ enrollments.count }}</h2>
+                            <p class="text-muted">Courses</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h2 class="text-warning">{{ submissions.count }}</h2>
+                            <p class="text-muted">Submissions</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h2 class="text-info">{{ quiz_results.count }}</h2>
+                            <p class="text-muted">Quizzes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Enrolled Courses</h5>
+                </div>
+                <div class="card-body">
+                    {% if enrollments %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Course</th>
+                                    <th>Section</th>
+                                    <th>Teacher</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for enrollment in enrollments %}
+                                <tr>
+                                    <td>{{ enrollment.section.course.name }}</td>
+                                    <td>{{ enrollment.section.section_name }}</td>
+                                    <td>{{ enrollment.section.teacher.get_full_name }}</td>
+                                    <td>
+                                        {% if enrollment.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No enrollments found</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
