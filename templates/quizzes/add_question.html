@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Question{% endblock %}
+{% block page_title %}Add Question to {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                            <div class="text-danger">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        <hr>
+                        <h6>Answer Options</h6>
+                        <p class="text-muted">Add 2-6 options. Check the correct answer(s).</p>
+                        
+                        <input type="hidden" name="num_options" value="4">
+                        
+                        {% for i in "0123" %}
+                        <div class="row mb-2">
+                            <div class="col-md-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="is_correct_{{ i }}" id="check{{ i }}">
+                                </div>
+                            </div>
+                            <div class="col-md-11">
+                                <input type="text" name="option_{{ i }}" class="form-control" placeholder="Option {{ i|add:1 }}" required>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'quiz_detail' quiz.id %}" class="btn btn-secondary">Back</a>
+                            <div>
+                                <button type="submit" name="add_another" class="btn btn-outline-primary me-2">
+                                    Add & Create Another
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    Add Question
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            {% if questions %}
+            <div class="card mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Existing Questions ({{ questions.count }})</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for question in questions %}
+                        <div class="list-group-item">
+                            <strong>Q{{ question.order }}:</strong> {{ question.question_text }}
+                            <span class="badge bg-info ms-2">{{ question.marks }} marks</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

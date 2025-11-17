@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ quiz.title }}{% endblock %}
+{% block page_title %}{{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ quiz.title }}</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Course:</strong> {{ quiz.section.course.name }}</p>
+                    <p><strong>Description:</strong> {{ quiz.description }}</p>
+                    <p><strong>Duration:</strong> {{ quiz.duration_minutes }} minutes</p>
+                    <p><strong>Total Marks:</strong> {{ quiz.total_marks }}</p>
+                    <p><strong>Passing Marks:</strong> {{ quiz.passing_marks }}</p>
+                    <p><strong>Difficulty:</strong> 
+                        <span class="badge bg-{% if quiz.difficulty == 'easy' %}success{% elif quiz.difficulty == 'medium' %}warning{% else %}danger{% endif %}">
+                            {{ quiz.get_difficulty_display }}
+                        </span>
+                    </p>
+                    <p><strong>Available:</strong> {{ quiz.start_time|date:"M d, Y H:i" }} - {{ quiz.end_time|date:"M d, Y H:i" }}</p>
+                    
+                    {% if user.role == 'teacher' %}
+                    <hr>
+                    <h6>Questions ({{ questions.count }})</h6>
+                    <div class="list-group">
+                        {% for question in questions %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <span><strong>Q{{ question.order }}:</strong> {{ question.question_text|truncatewords:15 }}</span>
+                                <div>
+                                    <a href="{% url 'edit_question' question.id %}" class="btn btn-sm btn-warning">Edit</a>
+                                    <a href="{% url 'delete_question' question.id %}" class="btn btn-sm btn-danger">Delete</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">No questions added yet</p>
+                        {% endfor %}
+                    </div>
+                    <a href="{% url 'add_question' quiz.id %}" class="btn btn-primary mt-3">
+                        <i class="bi bi-plus-circle me-2"></i>Add Question
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            {% if user.role == 'student' %}
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Your Attempts</h5>
+                </div>
+                <div class="card-body">
+                    {% if attempts %}
+                    {% for attempt in attempts %}
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <p><strong>Attempt {{ attempt.attempt_number }}</strong></p>
+                            <p>Score: {{ attempt.percentage|floatformat:2 }}%</p>
+                            <p>Status: <span class="badge bg-{{ attempt.status }}">{{ attempt.get_status_display }}</span></p>
+                            {% if attempt.status == 'submitted' %}
+                            <a href="{% url 'quiz_result' attempt.id %}" class="btn btn-sm btn-primary">View Result</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    {% if can_attempt %}
+                    <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-success w-100 mt-3">
+                        <i class="bi bi-play-circle me-2"></i>Take Quiz
+                    </a>
+                    {% else %}
+                    <div class="alert alert-warning mt-3">
+                        {% if not quiz.is_available %}
+                        Quiz is not currently available
+                        {% else %}
+                        You have exhausted all attempts
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'quiz_edit' quiz.id %}" class="btn btn-warning w-100 mb-2">
+                        <i class="bi bi-pencil me-2"></i>Edit Quiz
+                    </a>
+                    <a href="{% url 'quiz_results' quiz.id %}" class="btn btn-info w-100 mb-2">
+                        <i class="bi bi-bar-chart me-2"></i>View Results
+                    </a>
+                    <a href="{% url 'quiz_analytics' quiz.id %}" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-graph-up me-2"></i>Analytics
+                    </a>
+                    <a href="{% url 'quiz_delete' quiz.id %}" class="btn btn-danger w-100">
+                        <i class="bi bi-trash me-2"></i>Delete Quiz
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Quiz{% endblock %}
+{% block page_title %}{{ action }} Quiz{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">{{ action }} Quiz - {{ section.course.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <small class="text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% if field.errors %}
+                            <div class="text-danger">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'quiz_list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">{{ action }} Quiz</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

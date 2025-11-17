@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Take Quiz{% endblock %}
+{% block page_title %}{{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="alert alert-info mb-4">
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>Duration:</strong> {{ quiz.duration_minutes }} minutes
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Total Questions:</strong> {{ questions.count }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Total Marks:</strong> {{ quiz.total_marks }}
+                    </div>
+                </div>
+            </div>
+            
+            <form method="post" action="{% url 'submit_quiz' attempt.id %}" id="quizForm">
+                {% csrf_token %}
+                
+                {% for question in questions %}
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">
+                            Question {{ forloop.counter }} ({{ question.marks }} marks)
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="lead">{{ question.question_text }}</p>
+                        
+                        {% if question.question_type == 'mcq' or question.question_type == 'true_false' %}
+                        <div class="mt-3">
+                            {% for option in question.options.all %}
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" 
+                                       name="question_{{ question.id }}" 
+                                       value="{{ option.id }}" 
+                                       id="option_{{ option.id }}">
+                                <label class="form-check-label" for="option_{{ option.id }}">
+                                    {{ option.option_text }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% elif question.question_type == 'multiple' %}
+                        <div class="mt-3">
+                            {% for option in question.options.all %}
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" 
+                                       name="question_{{ question.id }}" 
+                                       value="{{ option.id }}" 
+                                       id="option_{{ option.id }}">
+                                <label class="form-check-label" for="option_{{ option.id }}">
+                                    {{ option.option_text }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% elif question.question_type == 'short' %}
+                        <div class="mt-3">
+                            <textarea name="question_{{ question.id }}" 
+                                      class="form-control" rows="4" 
+                                      placeholder="Type your answer here..."></textarea>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <div class="card">
+                    <div class="card-body text-center">
+                        <button type="submit" class="btn btn-lg btn-success">
+                            <i class="bi bi-check-circle me-2"></i>Submit Quiz
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Timer functionality
+let timeLeft = {{ quiz.duration_minutes }} * 60;
+const timerDisplay = document.createElement('div');
+timerDisplay.className = 'alert alert-warning position-fixed top-0 end-0 m-3';
+timerDisplay.style.zIndex = '1050';
+document.body.appendChild(timerDisplay);
+
+function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerDisplay.innerHTML = `<strong>Time Left:</strong> ${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    if (timeLeft <= 0) {
+        document.getElementById('quizForm').submit();
+    }
+    timeLeft--;
+}
+
+setInterval(updateTimer, 1000);
+updateTimer();
+</script>
+{% endblock %}
