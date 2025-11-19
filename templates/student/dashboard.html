@@ -1,0 +1,104 @@
+<!-- templates/student/dashboard.html -->
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard{% endblock %}
+{% block page_title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white p-4">
+                    <h2 class="mb-2">Welcome back, {{ student.user.first_name }}! 👋</h2>
+                    <p class="mb-0">Roll Number: <strong>{{ student.roll_number }}</strong> | Semester: <strong>{{ student.current_semester }}</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">SPI Score</h6>
+                    <h2 class="text-success">{{ spi_score|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Enrolled Courses</h6>
+                    <h2 class="text-primary">{{ total_courses }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Pending Assignments</h6>
+                    <h2 class="text-warning">{{ pending_assignments }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Badges Earned</h6>
+                    <h2 class="text-danger">{{ recent_badges|length }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">My Courses</h5>
+                </div>
+                <div class="card-body">
+                    {% if enrollments %}
+                    <div class="list-group">
+                        {% for enrollment in enrollments %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6>{{ enrollment.section.course.name }}</h6>
+                                    <small class="text-muted">{{ enrollment.section.teacher.get_full_name }}</small>
+                                </div>
+                                <a href="{% url 'course_detail' enrollment.section.id %}" class="btn btn-sm btn-primary">View</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No courses enrolled</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Upcoming Quizzes</h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_quizzes %}
+                    {% for quiz in upcoming_quizzes %}
+                    <div class="mb-3">
+                        <h6>{{ quiz.title }}</h6>
+                        <small>{{ quiz.start_time|date:"M d, H:i" }}</small>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted">No upcoming quizzes</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

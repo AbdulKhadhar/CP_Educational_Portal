@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ assignment.title }}{% endblock %}
+{% block page_title %}{{ assignment.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ assignment.title }}</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Due Date:</strong> {{ assignment.due_date|date:"M d, Y H:i" }}</p>
+                    <p><strong>Total Marks:</strong> {{ assignment.total_marks }}</p>
+                    <hr>
+                    <p>{{ assignment.description|linebreaks }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Your Submission</h5>
+                </div>
+                <div class="card-body">
+                    {% if submission %}
+                    <div class="alert alert-success">Submitted</div>
+                    <p><strong>Status:</strong> {{ submission.get_status_display }}</p>
+                    {% if submission.status == 'graded' %}
+                    <h3>{{ submission.marks_obtained }}/{{ assignment.total_marks }}</h3>
+                    {% endif %}
+                    {% else %}
+                    {% if can_submit %}
+                    <a href="{% url 'submit_assignment' assignment.id %}" class="btn btn-primary w-100">Submit</a>
+                    {% else %}
+                    <div class="alert alert-warning">Deadline passed</div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

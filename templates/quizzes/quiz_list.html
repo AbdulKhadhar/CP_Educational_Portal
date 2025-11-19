@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Quizzes{% endblock %}
+{% block page_title %}Quizzes{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Available Quizzes</h5>
+                </div>
+                <div class="card-body">
+                    {% if available_quizzes %}
+                    {% for quiz in available_quizzes %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6>{{ quiz.title }}</h6>
+                            <p class="small text-muted">{{ quiz.section.course.name }}</p>
+                            <a href="{% url 'quiz_detail' quiz.id %}" class="btn btn-sm btn-primary">View Quiz</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted">No available quizzes</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Upcoming Quizzes</h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_quizzes %}
+                    {% for quiz in upcoming_quizzes %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6>{{ quiz.title }}</h6>
+                            <p class="small">Starts: {{ quiz.start_time|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted">No upcoming quizzes</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

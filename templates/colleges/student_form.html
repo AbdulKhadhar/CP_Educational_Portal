@@ -12,50 +12,77 @@
                     <h5 class="mb-0">Student Registration Form</h5>
                 </div>
                 <div class="card-body">
-                    <form method="post">
+                    <form method="post" novalidate>
                         {% csrf_token %}
                         
-                        <h6 class="border-bottom pb-2 mb-3">Personal Information</h6>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">First Name *</label>
-                                <input type="text" name="first_name" class="form-control" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Last Name *</label>
-                                <input type="text" name="last_name" class="form-control" required>
-                            </div>
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
                         </div>
+                        {% endif %}
+
+                        <h6 class="border-bottom pb-2 mb-3">Personal & Account Information</h6>
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Email *</label>
-                                <input type="email" name="email" class="form-control" required>
+                                <label class="form-label">{{ form.first_name.label }} {% if form.first_name.field.required %}<span class="text-danger">*</span>{% endif %}</label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}<div class="text-danger">{{ form.first_name.errors }}</div>{% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Phone</label>
-                                <input type="text" name="phone" class="form-control">
+                                <label class="form-label">{{ form.last_name.label }} {% if form.last_name.field.required %}<span class="text-danger">*</span>{% endif %}</label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}<div class="text-danger">{{ form.last_name.errors }}</div>{% endif %}
                             </div>
                         </div>
-                        
-                        <h6 class="border-bottom pb-2 mb-3 mt-4">Account Information</h6>
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Username *</label>
-                                <input type="text" name="username" class="form-control" required>
+                                <label class="form-label">{{ form.email.label }} {% if form.email.field.required %}<span class="text-danger">*</span>{% endif %}</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}<div class="text-danger">{{ form.email.errors }}</div>{% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Password *</label>
-                                <input type="password" name="password" class="form-control" required>
+                                <label class="form-label">{{ form.phone.label }}</label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}<div class="text-danger">{{ form.phone.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.username.label }} {% if form.username.field.required %}<span class="text-danger">*</span>{% endif %}</label>
+                                {{ form.username }}
+                                {% if form.username.errors %}<div class="text-danger">{{ form.username.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.password.label }} {% if form.password.field.required %}<span class="text-danger">*</span>{% endif %}</label>
+                                {{ form.password }}
+                                {% if form.password.errors %}<div class="text-danger">{{ form.password.errors }}</div>{% endif %}
                             </div>
                         </div>
                         
                         <h6 class="border-bottom pb-2 mb-3 mt-4">Academic Information</h6>
-                        {% for field in form %}
-                        <div class="mb-3">
-                            <label class="form-label">{{ field.label }}</label>
+                        
+                        {% for field in form.hidden_fields %}
                             {{ field }}
-                        </div>
+                        {% endfor %}
+
+                        {% for field in form %}
+                            {% if field.name not in "first_name,last_name,email,phone,username,password" %}
+                            <div class="mb-3">
+                                <label class="form-label">{{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                <div class="text-danger">{{ field.errors }}</div>
+                                {% endif %}
+                                {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
                         {% endfor %}
                         
                         <div class="d-flex justify-content-between mt-4">

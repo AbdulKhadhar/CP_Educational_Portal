@@ -49,7 +49,7 @@ class TeacherForm(forms.ModelForm):
     
     class Meta:
         model = Teacher
-        fields = ['employee_id', 'qualification', 'specialization', 'joining_date']
+        fields = ['employee_id', 'qualification', 'specialization', 'joining_date','department']
         widgets = {
             'employee_id': forms.TextInput(attrs={'class': 'form-control'}),
             'qualification': forms.TextInput(attrs={'class': 'form-control'}),
@@ -68,8 +68,9 @@ class StudentForm(forms.ModelForm):
     
     class Meta:
         model = Student
-        fields = ['roll_number', 'admission_year', 'current_semester', 'guardian_name', 'guardian_phone']
+        fields = ['department','roll_number', 'admission_year', 'current_semester', 'guardian_name', 'guardian_phone']
         widgets = {
+            'department': forms.Select(attrs={'class': 'form-select'}),
             'roll_number': forms.TextInput(attrs={'class': 'form-control'}),
             'admission_year': forms.NumberInput(attrs={'class': 'form-control'}),
             'current_semester': forms.Select(attrs={'class': 'form-select'}),

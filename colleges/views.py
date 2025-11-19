@@ -301,12 +301,16 @@ def teacher_list(request):
 @login_required
 def teacher_register(request):
     """Register new teacher"""
+    
     if request.user.role != 'college_admin':
         messages.error(request, 'Access denied.')
         return redirect('dashboard')
     
+    college_departments_queryset = Department.objects.filter(college=request.user.college)
+    
     if request.method == 'POST':
         form = TeacherForm(request.POST)
+        form.fields['department'].queryset = college_departments_queryset
         if form.is_valid():
             # Create user first
             user = User.objects.create_user(
@@ -323,18 +327,19 @@ def teacher_register(request):
             # Create teacher profile
             teacher = form.save(commit=False)
             teacher.user = user
-            teacher.department = form.cleaned_data['department']
+            
             teacher.save()
             
             messages.success(request, f'Teacher "{user.get_full_name()}" registered successfully!')
             return redirect('teacher_list')
     else:
         form = TeacherForm()
+       
+        form.fields['department'].queryset = college_departments_queryset
     
-    departments = Department.objects.filter(college=request.user.college)
+   
     return render(request, 'colleges/teacher_form.html', {
         'form': form,
-        'departments': departments,
         'action': 'Register'
     })
 
@@ -418,16 +423,68 @@ def student_list(request):
     return render(request, 'colleges/student_list.html', context)
 
 @login_required
-def student_register(request):
-    """Register new student"""
+def bulk_enroll_existing_students(request):
+    """
+    Finds existing students and enrolls them into all relevant sections 
+    based on their department and current semester.
+    (This is designed to be run manually by the college admin to fix missing enrollment data.)
+    """
     if request.user.role != 'college_admin':
         messages.error(request, 'Access denied.')
         return redirect('dashboard')
     
     if request.method == 'POST':
+        # Filter students and sections by the college of the admin
+        college = request.user.college
+        
+        # 1. Get all students that belong to the college
+        students = Student.objects.filter(
+            department__college=college,
+            user__is_active=True
+            ).select_related('department')
+
+        total_new_enrollments = 0
+        
+        for student in students:
+            # 2. Find all ClassSections that match the student's current department and semester
+            relevant_sections = ClassSection.objects.filter(
+                course__department=student.department,
+                course__semester=student.current_semester
+            )
+            
+            # 3. Prepare enrollment records for bulk creation
+            # Use a list comprehension to build the list of new Enrollment objects
+            new_enrollments = [
+                Enrollment(student=student, section=section)
+                for section in relevant_sections
+            ]
+            
+            # 4. Bulk create them, ignoring existing 'unique_together' violations
+            created_enrollments = Enrollment.objects.bulk_create(new_enrollments, ignore_conflicts=True)
+            total_new_enrollments += len(created_enrollments)
+
+        messages.success(request, f'Bulk enrollment complete. Created {total_new_enrollments} new enrollment records for students in your college.')
+        return redirect('student_list') # Redirect to student list or dashboard
+    
+    # Render a confirmation page
+    return render(request, 'colleges/bulk_enroll_confirm.html', {})
+
+
+@login_required
+def student_register(request):
+    """Register new student AND automatically enroll them in appropriate sections"""
+    if request.user.role != 'college_admin':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    
+    college_departments_queryset = Department.objects.filter(college=request.user.college)
+
+    if request.method == 'POST':
         form = StudentForm(request.POST)
+        form.fields['department'].queryset = college_departments_queryset # Apply queryset for security/context
+        
         if form.is_valid():
-            # Create user first
+            # 1. Create User
             user = User.objects.create_user(
                 username=form.cleaned_data['username'],
                 email=form.cleaned_data['email'],
@@ -439,21 +496,43 @@ def student_register(request):
                 phone=form.cleaned_data['phone']
             )
             
-            # Create student profile
+            # 2. Create Student Profile
             student = form.save(commit=False)
             student.user = user
+            # Department and Semester are cleaned_data from the form
             student.department = form.cleaned_data['department']
+            student.current_semester = form.cleaned_data['current_semester']
             student.save()
             
-            messages.success(request, f'Student "{user.get_full_name()}" registered successfully!')
+            # 3. --- NEW: AUTO-ENROLLMENT LOGIC ---
+            
+            # Find all active sections for this student's department and current semester
+            relevant_sections = ClassSection.objects.filter(
+                course__department=student.department,
+                course__semester=student.current_semester # Assumes Course model has a 'semester' field
+            )
+            
+            new_enrollments = []
+            for section in relevant_sections:
+                new_enrollments.append(
+                    Enrollment(student=student, section=section)
+                )
+
+            # Bulk create all new enrollments at once
+            Enrollment.objects.bulk_create(new_enrollments, ignore_conflicts=True)
+
+            # --- END AUTO-ENROLLMENT LOGIC ---
+            
+            messages.success(request, f'Student "{user.get_full_name()}" registered and enrolled in {len(new_enrollments)} courses successfully!')
             return redirect('student_list')
     else:
         form = StudentForm()
     
-    departments = Department.objects.filter(college=request.user.college)
+    # Ensure the department dropdown only shows departments from the current college
+    form.fields['department'].queryset = college_departments_queryset
+    
     return render(request, 'colleges/student_form.html', {
         'form': form,
-        'departments': departments,
         'action': 'Register'
     })
 

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Report{% endblock %}
+{% block page_title %}Attendance Report{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">{{ section.course.name }} - Section {{ section.section_name }}</h5>
+        </div>
+        <div class="card-body">
+            {% if attendance_data %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Roll Number</th>
+                        <th>Student Name</th>
+                        <th>Total Classes</th>
+                        <th>Attended</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in attendance_data %}
+                    <tr>
+                        <td>{{ data.student.roll_number }}</td>
+                        <td>{{ data.student.user.get_full_name }}</td>
+                        <td>{{ data.total }}</td>
+                        <td>{{ data.attended }}</td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar {% if data.percentage >= 75 %}bg-success{% elif data.percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ data.percentage }}%">
+                                    {{ data.percentage|floatformat:1 }}%
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">No attendance records</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

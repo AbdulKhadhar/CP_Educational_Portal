@@ -73,7 +73,14 @@ class Submission(models.Model):
     )
     
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='submissions')
+
     student = models.ForeignKey('colleges.Student', on_delete=models.CASCADE, related_name='submissions')
+    enrollment = models.ForeignKey(
+        'colleges.Enrollment',
+        on_delete=models.CASCADE, 
+        related_name='submissions' ,
+        
+    )
     submission_file = models.FileField(upload_to='submissions/')
     submission_text = models.TextField(blank=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
@@ -96,7 +103,7 @@ class Submission(models.Model):
         return self.submitted_at > self.assignment.due_date
     
     class Meta:
-        unique_together = ['assignment', 'student']
+        unique_together = ['assignment', 'enrollment']
         ordering = ['-submitted_at']
 
 

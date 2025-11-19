@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ section.course.name }}{% endblock %}
+{% block page_title %}{{ section.course.name }} - Section {{ section.section_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row g-4">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex justify-content-between">
+                    <h5 class="mb-0">Study Materials</h5>
+                    {% if user.role == 'teacher' %}
+                    <a href="{% url 'upload_material' section.id %}" class="btn btn-sm btn-primary">Upload</a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if materials %}
+                    <div class="list-group">
+                        {% for material in materials %}
+                        <div class="list-group-item d-flex justify-content-between">
+                            <div>
+                                <h6>{{ material.title }}</h6>
+                                <small class="text-muted">{{ material.get_material_type_display }}</small>
+                            </div>
+                            <a href="{% url 'download_material' material.id %}" class="btn btn-sm btn-outline-primary">Download</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No materials uploaded</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between">
+                    <h5 class="mb-0">Assignments</h5>
+                    {% if user.role == 'teacher' %}
+                    <a href="{% url 'create_assignment' section.id %}" class="btn btn-sm btn-primary">Create</a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if assignments %}
+                    <div class="list-group">
+                        {% for assignment in assignments %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <h6>{{ assignment.title }}</h6>
+                                <span class="badge bg-info">{{ assignment.get_status_display }}</span>
+                            </div>
+                            <p class="small text-muted mb-1">Due: {{ assignment.due_date|date:"M d, Y H:i" }}</p>
+                            <a href="{% url 'assignment_detail' assignment.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No assignments</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            
+            {# --- QUIZ OPTIONS CARD (Updated URLs) --- #}
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Quizzes & Assessments 📝</h5>
+                </div>
+                <div class="card-body d-grid gap-2">
+                    {% if user.role == 'teacher' %}
+                        <a href="{% url 'quiz_list' %}" class="btn btn-outline-info">Manage Quizzes</a>
+                        <a href="{% url 'quiz_create' section.id %}" class="btn btn-primary">Create New Quiz</a>
+                    {% elif user.role == 'student' %}
+                        <a href="{% url 'quiz_list' %}" class="btn btn-success">Take a Quiz</a>
+                    {% endif %}
+                </div>
+            </div>
+            {# --- END QUIZ OPTIONS CARD --- #}
+            
+            {# --- ATTENDANCE OPTIONS CARD (Updated URLs) --- #}
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Attendance 🧑‍🎓</h5>
+                </div>
+                <div class="card-body d-grid gap-2">
+                    {% if user.role == 'teacher' %}
+                        <a href="{% url 'mark_attendance' section.id %}" class="btn btn-warning">Mark Attendance</a>
+                        <a href="{% url 'attendance_report' section.id %}" class="btn btn-outline-secondary">View Records</a>
+                    {% elif user.role == 'student' %}
+                        <a href="{% url 'attendance_report' section.id %}" class="btn btn-outline-secondary">View My Attendance</a>
+                    {% endif %}
+                </div>
+            </div>
+            {# --- END ATTENDANCE OPTIONS CARD --- #}
+            
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Announcements</h5>
+                </div>
+                <div class="card-body">
+                    {% if announcements %}
+                    {% for announcement in announcements %}
+                    <div class="mb-3 p-3 bg-light rounded">
+                        <h6>{{ announcement.title }}</h6>
+                        <p class="small mb-0">{{ announcement.content|truncatewords:20 }}</p>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted">No announcements</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

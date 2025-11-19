@@ -4,6 +4,14 @@
 {% block page_title %}Course Management{% endblock %}
 
 {% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-end">
+        <a href="{% url 'department_list' %}" class="btn btn-outline-secondary me-2">Manage Departments</a>
+        <!-- <a href="{% url 'course_create' 0 %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Add New Course
+        </a> -->
+    </div>
+</div>
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-md-6">
@@ -11,16 +19,14 @@
                 <select name="department" class="form-select me-2">
                     <option value="">All Departments</option>
                     {% for dept in departments %}
-                    <option value="{{ dept.id }}" {% if selected_dept == dept.id|stringformat:"s" %}selected{% endif %}>
-                        {{ dept.name }}
-                    </option>
+                    <option value="{{ dept.id }}" {% if selected_dept == dept.id|stringformat:"s" %} selected{% endif %}>
                     {% endfor %}
                 </select>
                 <button type="submit" class="btn btn-outline-primary">Filter</button>
             </form>
         </div>
     </div>
-    
+
     <div class="card">
         <div class="card-body">
             {% if courses %}
@@ -45,6 +51,10 @@
                             <td><span class="badge bg-info">{{ course.credits }}</span></td>
                             <td>Semester {{ course.semester }}</td>
                             <td class="text-end">
+                                <a href="{% url 'section_list' %}?course_id={{ course.id }}"
+                                    class="btn btn-sm btn-info me-1" title="Manage Sections">
+                                    <i class="bi bi-person-lines-fill"></i>
+                                </a>
                                 <a href="{% url 'course_edit' course.id %}" class="btn btn-sm btn-warning">
                                     <i class="bi bi-pencil"></i>
                                 </a>
@@ -67,4 +77,3 @@
     </div>
 </div>
 {% endblock %}
-

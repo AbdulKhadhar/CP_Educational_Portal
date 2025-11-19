@@ -197,6 +197,7 @@ def delete_assignment(request, assignment_id):
 
 @login_required
 def submit_assignment(request, assignment_id):
+    # 1. Access Control
     if request.user.role != 'student':
         messages.error(request, 'Only students can submit assignments.')
         return redirect('dashboard')
@@ -204,30 +205,47 @@ def submit_assignment(request, assignment_id):
     assignment = get_object_or_404(Assignment, id=assignment_id)
     student = get_object_or_404(Student, user=request.user)
     
-    if not Enrollment.objects.filter(student=student, section=assignment.section, is_active=True).exists():
-        messages.error(request, 'You are not enrolled in this course.')
+    # 2. Enrollment Check & Fetch (Required to set submission.enrollment)
+    try:
+        # Fetch the specific Enrollment object linking the student to this assignment's section
+        enrollment = Enrollment.objects.get(
+            student=student, 
+            section=assignment.section, 
+            is_active=True
+        )
+    except Enrollment.DoesNotExist:
+        messages.error(request, 'You are not enrolled in the course associated with this assignment.')
         return redirect('student_dashboard')
-    
-    if Submission.objects.filter(assignment=assignment, student=student).exists():
+
+    # 3. Duplicate Submission Check
+    # Check using both 'assignment' and the fetched 'enrollment' for maximum integrity.
+    if Submission.objects.filter(assignment=assignment, enrollment=enrollment).exists():
         messages.warning(request, 'You have already submitted this assignment.')
         return redirect('assignment_detail', assignment_id=assignment.id)
     
+    # 4. Deadline Check
     if assignment.is_overdue() and not assignment.allow_late_submission:
         messages.error(request, 'Submission deadline has passed.')
         return redirect('assignment_detail', assignment_id=assignment.id)
     
+    # 5. POST Request Handling
     if request.method == 'POST':
         form = SubmissionForm(request.POST, request.FILES)
         if form.is_valid():
             submission = form.save(commit=False)
-            submission.assignment = assignment
-            submission.student = student
             
+            # 🛑 THE INTEGRITY FIXES: Setting mandatory Foreign Keys
+            submission.assignment = assignment
+            submission.student = student       # Fixes NOT NULL constraint failed: courses_submission.student_id
+            submission.enrollment = enrollment # Fixes NOT NULL constraint failed: courses_submission.enrollment_id
+            
+            # 6. Status Logic
             if assignment.is_overdue():
                 submission.status = 'late'
             else:
                 submission.status = 'submitted'
             
+            # 7. Save and Redirect
             submission.save()
             messages.success(request, 'Assignment submitted successfully!')
             return redirect('assignment_detail', assignment_id=assignment.id)

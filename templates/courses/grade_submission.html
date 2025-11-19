@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Grade Submission{% endblock %}
+{% block page_title %}Grade Submission{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Student Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Student:</strong> {{ submission.student.user.get_full_name }}</p>
+                    <p><strong>Roll Number:</strong> {{ submission.student.roll_number }}</p>
+                    <p><strong>Submitted On:</strong> {{ submission.submitted_at|date:"M d, Y H:i" }}</p>
+                    {% if submission.submission_file %}
+                    <a href="{{ submission.submission_file.url }}" class="btn btn-outline-primary" download>Download Submission</a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Grade Submission</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Marks Obtained (out of {{ submission.assignment.total_marks }})</label>
+                            <input type="number" name="marks_obtained" class="form-control" min="0" max="{{ submission.assignment.total_marks }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Feedback</label>
+                            <textarea name="feedback" class="form-control" rows="5"></textarea>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'assignment_detail' submission.assignment.id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Submit Grade</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

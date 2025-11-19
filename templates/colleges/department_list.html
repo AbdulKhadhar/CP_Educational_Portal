@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Departments{% endblock %}
+{% block page_title %}Department Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form method="get" class="d-flex">
+                <input type="text" name="search" class="form-control me-2" placeholder="Search departments...">
+                <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+            </form>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'department_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Add Department
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if departments %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>HOD</th>
+                            <th>Created</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dept in departments %}
+                        <tr>
+                            <td><strong>{{ dept.name }}</strong></td>
+                            <td><span class="badge bg-info">{{ dept.code }}</span></td>
+                            <td>{{ dept.hod.get_full_name|default:"Not Assigned" }}</td>
+                            <td>{{ dept.created_at|date:"M d, Y" }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'course_create' dept.id %}" class="btn btn-sm btn-primary me-2"
+                                    title="Add Course">
+                                    <i class="bi bi-plus-circle-fill"></i>
+                                </a>
+                                <a href="{% url 'department_edit' dept.id %}" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'department_delete' dept.id %}" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-building" style="font-size: 4rem; color: #ccc;"></i>
+                <p class="text-muted mt-3">No departments found</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

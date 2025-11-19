@@ -150,7 +150,13 @@ class QuizAnswer(models.Model):
 
 class QuizResult(models.Model):
     attempt = models.OneToOneField(QuizAttempt, on_delete=models.CASCADE, related_name='result')
+
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='quiz_results')
+    enrollment = models.ForeignKey(
+        'colleges.Enrollment', 
+        on_delete=models.CASCADE, 
+        related_name='quiz_results'
+    )
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='results')
     score = models.DecimalField(max_digits=5, decimal_places=2)
     percentage = models.DecimalField(max_digits=5, decimal_places=2)

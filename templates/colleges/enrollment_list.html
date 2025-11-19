@@ -6,7 +6,16 @@
 {% block content %}
 <div class="container-fluid">
     <div class="row mb-4">
-        <div class="col-12 text-end">
+        <div class="col-12 text-end d-flex justify-content-end gap-2">
+            
+            {# --- ADDED BULK ENROLLMENT BUTTON HERE --- #}
+            {% if request.user.role == 'college_admin' %}
+                <a href="{% url 'bulk_enroll_existing_students' %}" class="btn btn-warning">
+                    <i class="bi bi-gear me-2"></i>Run Bulk Enrollment Fix
+                </a>
+            {% endif %}
+            {# --- END BUTTON --- #}
+
             <a href="{% url 'enrollment_create' %}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-2"></i>New Enrollment
             </a>
@@ -58,6 +67,9 @@
             <div class="text-center py-5">
                 <i class="bi bi-person-check" style="font-size: 4rem; color: #ccc;"></i>
                 <p class="text-muted mt-3">No enrollments found</p>
+                {% if request.user.role == 'college_admin' %}
+                <p class="mt-2">Use the "Run Bulk Enrollment Fix" button above to automatically enroll students.</p>
+                {% endif %}
             </div>
             {% endif %}
         </div>

@@ -38,4 +38,5 @@ urlpatterns = [
     path('enrollments/', views.enrollment_list, name='enrollment_list'),
     path('enrollments/create/', views.enrollment_create, name='enrollment_create'),
     path('enrollments/<int:pk>/delete/', views.enrollment_delete, name='enrollment_delete'),
+    path('enrollments/bulk-enroll/', views.bulk_enroll_existing_students, name='bulk_enroll_existing_students'),
 ]

@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% load static %}
+{% load analytics_extras %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid pt-4">
+
+    <h2>📊 Analytics Dashboard</h2>
+    <hr>
+
+    {% if user.role == 'college_admin' %}
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white shadow h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-auto"><i class="fas fa-users fa-2x"></i></div>
+                        <div class="col">
+                            <h5 class="card-title text-uppercase mb-0">Total Students</h5>
+                            <h3 class="card-text">{{ total_students }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white shadow h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-auto"><i class="fas fa-chalkboard-teacher fa-2x"></i></div>
+                        <div class="col">
+                            <h5 class="card-title text-uppercase mb-0">Total Teachers</h5>
+                            <h3 class="card-text">{{ total_teachers }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white shadow h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-auto"><i class="fas fa-book-open fa-2x"></i></div>
+                        <div class="col">
+                            <h5 class="card-title text-uppercase mb-0">Total Courses</h5>
+                            <h3 class="card-text">{{ total_courses }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-dark shadow h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-auto"><i class="fas fa-chart-line fa-2x"></i></div>
+                        <div class="col">
+                            <h5 class="card-title text-uppercase mb-0">Avg. SPI</h5>
+                            <h3 class="card-text">{{ spi_stats.avg_spi|default:0|floatformat:1 }}%</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow h-100 border-start border-danger border-4">
+                <div class="card-body">
+                    <h6 class="text-danger text-uppercase mb-3">Students At Risk</h6>
+                    <p class="h4">{{ spi_stats.at_risk|default:0 }} Students</p>
+                    <a href="{% url 'at_risk_students' %}" class="small text-danger">View Full Report <i
+                            class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">Recent Engagement (Last 30 Days)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            {% for key, value in recent_activity.items %}
+                            <div class="col-3">
+                                <div class="p-2 border rounded">
+                                    <p class="mb-0 small text-uppercase text-muted">{{ key|custom_replace:"_" }}</p>
+                                    <h4 class="mb-0 text-primary">{{ value }}</h4>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-light">SPI Distribution</div>
+                <div class="card-body"><canvas id="spiDistributionChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-light">Department Performance (Avg SPI)</div>
+                <div class="card-body"><canvas id="deptPerformanceChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+
+    {% elif user.role == 'teacher' %}
+    <div class="row mb-4">
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="card bg-secondary text-white shadow h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-auto"><i class="fas fa-users fa-2x"></i></div>
+                        <div class="col">
+                            <h5 class="card-title text-uppercase mb-0">Students Taught</h5>
+                            <h3 class="card-text">{{ total_students }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="card bg-danger text-white shadow h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-auto"><i class="fas fa-hourglass-half fa-2x"></i></div>
+                        <div class="col">
+                            <h5 class="card-title text-uppercase mb-0">Pending Grading</h5>
+                            <h3 class="card-text">{{ assignment_stats.pending_grading|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-12 mb-3">
+            <div class="card bg-dark text-white shadow h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-auto"><i class="fas fa-file-alt fa-2x"></i></div>
+                        <div class="col">
+                            <h5 class="card-title text-uppercase mb-0">Total Assignments</h5>
+                            <h3 class="card-text">{{ assignment_stats.total|default:0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-light">
+            <h6 class="mb-0">Attendance Overview by Section</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for item in attendance_overview %}
+                <div class="col-md-4 mb-3">
+                    <div class="p-3 border rounded">
+                        <h5 class="mb-1 text-primary">{{ item.section }}</h5>
+                        <p class="mb-0">Avg. Attendance: <strong class="h5">{{ item.avg_attendance }}%</strong></p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">You are not currently assigned to any active sections.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <p class="alert alert-danger">Access Denied. Your role does not permit viewing the analytics dashboard.</p>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if user.role == 'college_admin' %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+    // Utility function for fetching JSON data
+    async function fetchData(url) {
+        const response = await fetch(url);
+        return response.json();
+    }
+
+    // ===================================
+    // SPI Distribution Chart
+    // ===================================
+    async function renderSpiDistributionChart() {
+        const data = await fetchData("{% url 'api_spi_distribution' %}");
+        const ctx = document.getElementById('spiDistributionChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Number of Students',
+                    data: data.data,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Students' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    // ===================================
+    // Department Performance Chart
+    // ===================================
+    async function renderDeptPerformanceChart() {
+        const data = await fetchData("{% url 'api_department_performance' %}");
+        const ctx = document.getElementById('deptPerformanceChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Average SPI (%)',
+                    data: data.data,
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'SPI Score (%)' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderSpiDistributionChart();
+        renderDeptPerformanceChart();
+    });
+
+</script>
+{% endif %}
+{% endblock %}

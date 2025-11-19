@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Mark Attendance{% endblock %}
+{% block page_title %}Mark Attendance{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">{{ section.course.name }} - Section {{ section.section_name }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label">Date</label>
+                            <input type="date" name="date" class="form-control" value="{{ today }}" required>
+                        </div>
+                        
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Roll Number</th>
+                                    <th>Student Name</th>
+                                    <th>Status</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for enrollment in enrollments %}
+                                <tr>
+                                    <td>{{ enrollment.student.roll_number }}</td>
+                                    <td>{{ enrollment.student.user.get_full_name }}</td>
+                                    <td>
+                                        <select name="status_{{ enrollment.student.user.id }}" class="form-select">
+                                            <option value="present">Present</option>
+                                            <option value="absent">Absent</option>
+                                            <option value="late">Late</option>
+                                            <option value="excused">Excused</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="remarks_{{ enrollment.student.user.id }}" class="form-control" placeholder="Optional">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'course_detail' section.id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Mark Attendance</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

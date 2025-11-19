@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Educational Portal{% endblock %}</title>
-    
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
+
     <style>
         :root {
             --primary-color: #0d6efd;
@@ -20,81 +21,81 @@
             --danger-color: #dc3545;
             --warning-color: #ffc107;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
         }
-        
+
         .sidebar {
             min-height: 100vh;
             background: linear-gradient(180deg, #0d6efd 0%, #0a58ca 100%);
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         }
-        
+
         .sidebar .nav-link {
-            color: rgba(255,255,255,0.9);
+            color: rgba(255, 255, 255, 0.9);
             padding: 12px 20px;
             margin: 5px 10px;
             border-radius: 8px;
             transition: all 0.3s;
         }
-        
+
         .sidebar .nav-link:hover,
         .sidebar .nav-link.active {
-            background-color: rgba(255,255,255,0.2);
+            background-color: rgba(255, 255, 255, 0.2);
             color: #fff;
         }
-        
+
         .sidebar .nav-link i {
             margin-right: 10px;
             font-size: 1.1rem;
         }
-        
+
         .navbar {
             background-color: #fff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        
+
         .card {
             border: none;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             transition: transform 0.3s, box-shadow 0.3s;
         }
-        
+
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
         }
-        
+
         .stat-card {
             padding: 20px;
             border-left: 4px solid;
         }
-        
+
         .stat-card.primary {
             border-color: var(--primary-color);
         }
-        
+
         .stat-card.success {
             border-color: var(--success-color);
         }
-        
+
         .stat-card.warning {
             border-color: var(--warning-color);
         }
-        
+
         .stat-card.danger {
             border-color: var(--danger-color);
         }
-        
+
         .stat-card h2 {
             font-size: 2.5rem;
             font-weight: bold;
             margin-bottom: 5px;
         }
-        
+
         .btn-primary {
             background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
             border: none;
@@ -103,55 +104,56 @@
             font-weight: 500;
             transition: all 0.3s;
         }
-        
+
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
         }
-        
+
         .badge {
             padding: 8px 12px;
             font-weight: 500;
             border-radius: 6px;
         }
-        
+
         .table {
             background-color: #fff;
             border-radius: 12px;
             overflow: hidden;
         }
-        
+
         .table thead {
             background-color: #f8f9fa;
         }
-        
+
         .profile-img {
             width: 40px;
             height: 40px;
             border-radius: 50%;
             object-fit: cover;
         }
-        
+
         .spi-progress {
             height: 8px;
             border-radius: 10px;
         }
-        
+
         .chart-container {
             position: relative;
             height: 300px;
             margin: 20px 0;
         }
-        
+
         @media (max-width: 768px) {
             .sidebar {
                 min-height: auto;
             }
         }
     </style>
-    
+
     {% block extra_css %}{% endblock %}
 </head>
+
 <body>
     {% if user.is_authenticated %}
     <div class="container-fluid">
@@ -163,59 +165,104 @@
                         <h4 class="text-white fw-bold">EduPortal</h4>
                         <p class="text-white-50 small mb-0">{{ user.college.name }}</p>
                     </div>
-                    
+
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}">
+                            <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}"
+                                href="{% url 'dashboard' %}">
                                 <i class="bi bi-speedometer2"></i> Dashboard
                             </a>
                         </li>
-                        
+
                         {% if user.role == 'college_admin' %}
+
+                        <h6
+                            class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+                            <span class="text-white-50 small fw-bold">Management</span>
+                        </h6>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'department_list' %}">
+                            <a class="nav-link {% if 'department_list' in request.path %}active{% endif %}"
+                                href="{% url 'department_list' %}">
                                 <i class="bi bi-building"></i> Departments
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'teacher_list' %}">
+                            <a class="nav-link {% if 'teacher_list' in request.path %}active{% endif %}"
+                                href="{% url 'teacher_list' %}">
                                 <i class="bi bi-person-badge"></i> Teachers
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'student_list' %}">
+                            <a class="nav-link {% if 'student_list' in request.path %}active{% endif %}"
+                                href="{% url 'student_list' %}">
                                 <i class="bi bi-people"></i> Students
                             </a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'analytics_dashboard' %}">
+                            <a class="nav-link {% if 'course' in request.path or 'section' in request.path %}active{% endif %}"
+                                href="{% url 'course_list' %}">
+                                <i class="bi bi-book"></i> Courses & Sections
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'enrollment_list' in request.path or 'bulk-enroll' in request.path %}active{% endif %}"
+                                href="{% url 'enrollment_list' %}">
+                                <i class="bi bi-person-check"></i> Enrollments
+                            </a>
+                        </li>
+
+                        <h6
+                            class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+                            <span class="text-white-50 small fw-bold">Reports & Tools</span>
+                        </h6>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'analytics_dashboard' in request.path %}active{% endif %}"
+                                href="{% url 'analytics_dashboard' %}">
                                 <i class="bi bi-graph-up"></i> Analytics
                             </a>
                         </li>
+
                         {% elif user.role == 'teacher' %}
+
+                        <h6
+                            class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+                            <span class="text-white-50 small fw-bold">Teaching</span>
+                        </h6>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'section_list' %}">
+                            <a class="nav-link {% if 'section_list' in request.path %}active{% endif %}"
+                                href="{% url 'section_list' %}">
                                 <i class="bi bi-journal-text"></i> My Courses
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'quiz_list' %}">
+                            <a class="nav-link {% if 'quiz_list' in request.path %}active{% endif %}"
+                                href="{% url 'quiz_list' %}">
                                 <i class="bi bi-question-circle"></i> Quizzes
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'analytics_dashboard' %}">
+                            <a class="nav-link {% if 'analytics_dashboard' in request.path %}active{% endif %}"
+                                href="{% url 'analytics_dashboard' %}">
                                 <i class="bi bi-graph-up"></i> Analytics
                             </a>
                         </li>
+
                         {% elif user.role == 'student' %}
+
+                        <h6
+                            class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+                            <span class="text-white-50 small fw-bold">Learning</span>
+                        </h6>
                         <li class="nav-item">
                             <a class="nav-link" href="#">
                                 <i class="bi bi-book"></i> My Courses
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'quiz_list' %}">
+                            <a class="nav-link {% if 'quiz_list' in request.path %}active{% endif %}"
+                                href="{% url 'quiz_list' %}">
                                 <i class="bi bi-question-circle"></i> Quizzes
                             </a>
                         </li>
@@ -225,19 +272,26 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'badge_list' %}">
+                            <a class="nav-link {% if 'badge_list' in request.path %}active{% endif %}"
+                                href="{% url 'badge_list' %}">
                                 <i class="bi bi-trophy"></i> Badges
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'certificate_list' %}">
+                            <a class="nav-link {% if 'certificate_list' in request.path %}active{% endif %}"
+                                href="{% url 'certificate_list' %}">
                                 <i class="bi bi-award"></i> Certificates
                             </a>
                         </li>
                         {% endif %}
-                        
-                        <li class="nav-item mt-4">
-                            <a class="nav-link" href="{% url 'profile' %}">
+
+                        <h6
+                            class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+                            <span class="text-white-50 small fw-bold">Account</span>
+                        </h6>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'profile' in request.path %}active{% endif %}"
+                                href="{% url 'profile' %}">
                                 <i class="bi bi-person"></i> Profile
                             </a>
                         </li>
@@ -249,7 +303,7 @@
                     </ul>
                 </div>
             </nav>
-            
+
             <!-- Main content -->
             <main class="col-md-10 ms-sm-auto px-md-4">
                 <!-- Top Navbar -->
@@ -259,26 +313,32 @@
                         <div class="d-flex align-items-center">
                             <span class="badge bg-primary me-3">{{ user.get_role_display }}</span>
                             <div class="dropdown">
-                                <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#"
+                                    role="button" data-bs-toggle="dropdown">
                                     {% if user.profile_picture %}
                                     <img src="{{ user.profile_picture.url }}" alt="Profile" class="profile-img me-2">
                                     {% else %}
-                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2"
+                                        style="width: 40px; height: 40px;">
                                         {{ user.first_name.0 }}{{ user.last_name.0 }}
                                     </div>
                                     {% endif %}
                                     <span class="fw-bold">{{ user.get_full_name }}</span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i> Profile</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'profile' %}"><i
+                                                class="bi bi-person me-2"></i> Profile</a></li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li><a class="dropdown-item" href="{% url 'logout' %}"><i
+                                                class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                 </nav>
-                
+
                 <!-- Messages -->
                 {% if messages %}
                 <div class="messages mb-3">
@@ -290,7 +350,7 @@
                     {% endfor %}
                 </div>
                 {% endif %}
-                
+
                 <!-- Page Content -->
                 {% block content %}{% endblock %}
             </main>
@@ -300,9 +360,10 @@
     <!-- Login Page -->
     {% block login_content %}{% endblock %}
     {% endif %}
-    
+
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Teachers{% endblock %}
+{% block page_title %}Teacher Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-6"></div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'teacher_register' %}" class="btn btn-primary">
+                <i class="bi bi-person-plus me-2"></i>Register Teacher
+            </a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            {% if teachers %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Employee ID</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Qualification</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for teacher in teachers %}
+                        <tr>
+                            <td><strong>{{ teacher.employee_id }}</strong></td>
+                            <td>{{ teacher.user.get_full_name }}</td>
+                            <td>{{ teacher.department.name }}</td>
+                            <td>{{ teacher.qualification }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'teacher_edit' teacher.user.id %}" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'teacher_delete' teacher.user.id %}" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-person-badge" style="font-size: 4rem; color: #ccc;"></i>
+                <p class="text-muted mt-3">No teachers registered</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

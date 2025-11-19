@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from decimal import Decimal
 
 from accounts.models import College, User
 
@@ -9,8 +10,13 @@ class Department(models.Model):
     college = models.ForeignKey(College, on_delete=models.CASCADE, related_name='departments')
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=10)
-    hod = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
-                           related_name='headed_departments', limit_choices_to={'role': 'teacher'})
+    hod = models.ForeignKey(
+        'Teacher', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='headed_department' 
+    )
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -86,7 +92,10 @@ class Student(models.Model):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='students')
     roll_number = models.CharField(max_length=20, unique=True)
     admission_year = models.IntegerField()
-    current_semester = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(8)])
+    current_semester = models.IntegerField(
+        choices=Course.SEMESTER_CHOICES, # Reuse the choices list
+        validators=[MinValueValidator(1), MaxValueValidator(8)]
+    )
     guardian_name = models.CharField(max_length=100)
     guardian_phone = models.CharField(max_length=15)
     
@@ -94,7 +103,7 @@ class Student(models.Model):
         return f"{self.user.get_full_name()} - {self.roll_number}"
     
     def calculate_spi(self):
-        """Calculate Student Participation Index"""
+        """Calculate Student Participation Index (SPI)"""
         from django.db.models import Avg
         
         # Get all enrollments for current semester
@@ -103,43 +112,71 @@ class Student(models.Model):
         )
         
         if not enrollments.exists():
-            return 0
+            return Decimal('0.0') # Return Decimal('0.0') instead of integer 0
         
-        total_spi = 0
+        total_spi = Decimal('0.0')
+        enrollment_count = enrollments.count()
+
+        # Define weights as Decimal constants for precise calculation
+        WEIGHT_ASSIGNMENT = Decimal('0.4')
+        WEIGHT_QUIZ = Decimal('0.3')
+        WEIGHT_ATTENDANCE = Decimal('0.2')
+        WEIGHT_FORUM = Decimal('0.1')
+        
         for enrollment in enrollments:
-            # Assignment score (40%)
+            
+            # --- 1. Assignment score (40%) ---
             assignment_avg = enrollment.submissions.filter(
                 status='graded'
-            ).aggregate(Avg('marks_obtained'))['marks_obtained__avg'] or 0
+            ).aggregate(Avg('marks_obtained'))['marks_obtained__avg']
+            # Convert to Decimal, defaulting to 0.0 if None
+            assignment_avg = Decimal(assignment_avg) if assignment_avg is not None else Decimal('0.0')
             
-            # Quiz score (30%)
+            # --- 2. Quiz score (30%) ---
             quiz_avg = enrollment.quiz_results.aggregate(
                 Avg('percentage')
-            )['percentage__avg'] or 0
-            
-            # Attendance (20%)
+            )['percentage__avg']
+            # Convert to Decimal, defaulting to 0.0 if None
+            quiz_avg = Decimal(quiz_avg) if quiz_avg is not None else Decimal('0.0')
+
+            # --- 3. Attendance (20%) ---
             total_classes = enrollment.section.attendance_records.values('date').distinct().count()
             attended_classes = enrollment.section.attendance_records.filter(
                 student=self.user, status='present'
             ).count()
-            attendance_pct = (attended_classes / total_classes * 100) if total_classes > 0 else 0
             
-            # Forum participation (10%)
+            if total_classes > 0:
+                # 🛑 THE FIX: Convert at least one integer to Decimal BEFORE division
+                attendance_pct = (Decimal(attended_classes) / Decimal(total_classes)) * Decimal('100.0')
+            else:
+                attendance_pct = Decimal('0.0')
+            
+            # Ensure attendance_pct is a Decimal (it should be due to the Decimal('100.0') multiplication)
+
+            # --- 4. Forum participation (10%) ---
             forum_count = enrollment.section.discussions.filter(
                 models.Q(comments__author=self.user) | models.Q(author=self.user)
             ).distinct().count()
-            forum_score = min(forum_count * 10, 100)  # Cap at 100
+            # Forum score calculation should result in a Decimal
+            forum_score = min(Decimal(forum_count * 10), Decimal('100.0'))
             
-            # Calculate weighted SPI
+            # --- 5. Calculate weighted course SPI ---
+            # All operands are now Decimal objects, resolving the TypeError
             course_spi = (
-                (0.4 * assignment_avg) +
-                (0.3 * quiz_avg) +
-                (0.2 * attendance_pct) +
-                (0.1 * forum_score)
+                (WEIGHT_ASSIGNMENT * assignment_avg) +
+                (WEIGHT_QUIZ * quiz_avg) +
+                (WEIGHT_ATTENDANCE * attendance_pct) +
+                (WEIGHT_FORUM * forum_score)
             )
             total_spi += course_spi
         
-        return round(total_spi / enrollments.count(), 2)
+        # Calculate final semester SPI and round to 2 decimal places
+        final_spi = total_spi / Decimal(enrollment_count)
+        
+        # Rounding should be applied carefully when using Decimal.
+        # Python's round() can convert Decimal back to float. 
+        # Use quantize for Decimal rounding.
+        return final_spi.quantize(Decimal('0.01'))
     
     class Meta:
         ordering = ['roll_number']

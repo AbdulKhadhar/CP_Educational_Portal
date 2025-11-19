@@ -10,6 +10,7 @@ from datetime import timedelta
 from colleges.models import Student, Department, SPIRecord, Enrollment
 from courses.models import Attendance, Assignment, Submission
 from quizzes.models import QuizAttempt
+from accounts.models import User
 from discussions.models import Badge, StudentBadge, Certificate, Discussion, PeerGroup, GroupActivity
 
 @login_required
@@ -27,7 +28,7 @@ def analytics_dashboard(request):
     if user.role == 'college_admin':
         # Overall college stats
         total_students = Student.objects.filter(department__college=college).count()
-        total_teachers = college.users.filter(role='teacher').count()
+        total_teachers = User.objects.filter(college=college, role='teacher').count()
         total_courses = college.departments.aggregate(
             course_count=Count('courses')
         )['course_count'] or 0

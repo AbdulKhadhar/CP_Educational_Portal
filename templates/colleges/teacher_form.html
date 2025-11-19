@@ -18,48 +18,60 @@
                         <h6 class="border-bottom pb-2 mb-3">Personal Information</h6>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">First Name *</label>
-                                <input type="text" name="first_name" class="form-control" required>
+                                <label class="form-label">{{ form.first_name.label_tag }}</label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}<div class="text-danger">{{ form.first_name.errors }}</div>{% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Last Name *</label>
-                                <input type="text" name="last_name" class="form-control" required>
+                                <label class="form-label">{{ form.last_name.label_tag }}</label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}<div class="text-danger">{{ form.last_name.errors }}</div>{% endif %}
                             </div>
                         </div>
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Email *</label>
-                                <input type="email" name="email" class="form-control" required>
+                                <label class="form-label">{{ form.email.label_tag }}</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}<div class="text-danger">{{ form.email.errors }}</div>{% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Phone</label>
-                                <input type="text" name="phone" class="form-control">
+                                <label class="form-label">{{ form.phone.label_tag }}</label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}<div class="text-danger">{{ form.phone.errors }}</div>{% endif %}
                             </div>
                         </div>
                         
                         <h6 class="border-bottom pb-2 mb-3 mt-4">Account Information</h6>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Username *</label>
-                                <input type="text" name="username" class="form-control" required>
+                                <label class="form-label">{{ form.username.label_tag }}</label>
+                                {{ form.username }}
+                                {% if form.username.errors %}<div class="text-danger">{{ form.username.errors }}</div>{% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Password *</label>
-                                <input type="password" name="password" class="form-control" required>
+                                <label class="form-label">{{ form.password.label_tag }}</label>
+                                {{ form.password }}
+                                {% if form.password.errors %}<div class="text-danger">{{ form.password.errors }}</div>{% endif %}
                             </div>
                         </div>
                         
                         <h6 class="border-bottom pb-2 mb-3 mt-4">Professional Information</h6>
-                        {% for field in form %}
-                        <div class="mb-3">
-                            <label class="form-label">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.errors %}
-                            <div class="text-danger">{{ field.errors }}</div>
-                            {% endif %}
-                        </div>
+                        {% for field in form.visible_fields %}
+                        {% if field.name not in "first_name,last_name,email,phone,username,password" %}
+                            <div class="mb-3">
+                                <label class="form-label">{{ field.label_tag }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                <div class="text-danger">{{ field.errors }}</div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
                         {% endfor %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
                         
                         <div class="d-flex justify-content-between mt-4">
                             <a href="{% url 'teacher_list' %}" class="btn btn-secondary">Cancel</a>
@@ -74,4 +86,3 @@
     </div>
 </div>
 {% endblock %}
-

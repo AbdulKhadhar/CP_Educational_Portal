@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ discussion.title }}{% endblock %}
+{% block page_title %}{{ discussion.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h5 class="mb-0">{{ discussion.title }}</h5>
+                    <small class="text-muted">by {{ discussion.author.get_full_name }} • {{ discussion.created_at|date:"M d, Y" }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <p>{{ discussion.content|linebreaks }}</p>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between">
+            <h6 class="mb-0">Comments</h6>
+            {% if not discussion.is_locked %}
+            <a href="{% url 'add_comment' discussion.id %}" class="btn btn-sm btn-primary">Add Comment</a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% for comment in comments %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ comment.author.get_full_name }}</strong>
+                        <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                    </div>
+                    <p class="mt-2">{{ comment.content|linebreaks }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">No comments yet</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
