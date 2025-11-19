@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Certificates{% endblock %}
+{% block page_title %}My Certificates{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-body">
+            {% if certificates %}
+            <div class="row g-4">
+                {% for certificate in certificates %}
+                <div class="col-md-6">
+                    <div class="card border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0">{{ certificate.title }}</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Type:</strong> {{ certificate.get_certificate_type_display }}</p>
+                            <p><strong>Certificate Number:</strong> {{ certificate.certificate_number }}</p>
+                            <p><strong>Issued Date:</strong> {{ certificate.issued_date|date:"M d, Y" }}</p>
+                            <p><strong>Description:</strong> {{ certificate.description }}</p>
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'view_certificate' certificate.certificate_number %}" 
+                                   class="btn btn-primary">
+                                    <i class="bi bi-eye me-2"></i>View
+                                </a>
+                                {% if certificate.pdf_file %}
+                                <a href="{{ certificate.pdf_file.url }}" class="btn btn-outline-primary" download>
+                                    <i class="bi bi-download me-2"></i>Download
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-award" style="font-size: 4rem; color: #ccc;"></i>
+                <p class="text-muted mt-3">No certificates yet</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

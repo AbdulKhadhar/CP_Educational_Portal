@@ -1,0 +1,58 @@
+% extends 'base.html' %}
+
+{% block title %}SPI Report{% endblock %}
+{% block page_title %}Student Participation Index Report{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-body">
+            {% if spi_data %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Roll Number</th>
+                            <th>Student Name</th>
+                            <th>Department</th>
+                            <th>SPI Score</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in spi_data %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td><strong>{{ data.student.roll_number }}</strong></td>
+                            <td>{{ data.student.user.get_full_name }}</td>
+                            <td>{{ data.student.department.name }}</td>
+                            <td>
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar {% if data.current_spi >= 80 %}bg-success{% elif data.current_spi >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                         style="width: {{ data.current_spi }}%">
+                                        {{ data.current_spi|floatformat:2 }}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if data.status == 'high' %}
+                                <span class="badge bg-success">High Performer</span>
+                                {% elif data.status == 'at_risk' %}
+                                <span class="badge bg-danger">At Risk</span>
+                                {% else %}
+                                <span class="badge bg-warning">Moderate</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No SPI data available</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

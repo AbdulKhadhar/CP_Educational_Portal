@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Discussions{% endblock %}
+{% block page_title %}Discussion Forum - {{ section.course.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form method="get" class="d-flex">
+                <select name="category" class="form-select me-2">
+                    <option value="">All Categories</option>
+                    <option value="general">General</option>
+                    <option value="doubt">Doubt/Question</option>
+                    <option value="resource">Resource</option>
+                    <option value="feedback">Feedback</option>
+                </select>
+                <input type="text" name="search" class="form-control me-2" placeholder="Search...">
+                <button type="submit" class="btn btn-outline-primary">Filter</button>
+            </form>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'discussion_create' section.id %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>New Discussion
+            </a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            {% if discussions %}
+            <div class="list-group">
+                {% for discussion in discussions %}
+                <a href="{% url 'discussion_detail' discussion.id %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">
+                            {% if discussion.is_pinned %}<i class="bi bi-pin-fill text-danger me-1"></i>{% endif %}
+                            {% if discussion.is_locked %}<i class="bi bi-lock-fill text-warning me-1"></i>{% endif %}
+                            {{ discussion.title }}
+                        </h6>
+                        <small>{{ discussion.created_at|timesince }} ago</small>
+                    </div>
+                    <p class="mb-1">{{ discussion.content|truncatewords:20 }}</p>
+                    <small>
+                        <span class="badge bg-{{ discussion.category }}">{{ discussion.get_category_display }}</span>
+                        <i class="bi bi-person ms-2"></i> {{ discussion.author.get_full_name }}
+                        <i class="bi bi-chat ms-2"></i> {{ discussion.comment_count }} comments
+                        <i class="bi bi-eye ms-2"></i> {{ discussion.views_count }} views
+                    </small>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-chat-dots" style="font-size: 4rem; color: #ccc;"></i>
+                <p class="text-muted mt-3">No discussions yet</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

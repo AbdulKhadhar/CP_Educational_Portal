@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Participation Report{% endblock %}
+{% block page_title %}Student Participation Report{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-body">
+            {% if participation_data %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Roll Number</th>
+                            <th>Student Name</th>
+                            <th>Assignments</th>
+                            <th>Quizzes</th>
+                            <th>Discussions</th>
+                            <th>Attendance %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in participation_data %}
+                        <tr>
+                            <td><strong>{{ data.student.roll_number }}</strong></td>
+                            <td>{{ data.student.user.get_full_name }}</td>
+                            <td><span class="badge bg-primary">{{ data.assignments }}</span></td>
+                            <td><span class="badge bg-success">{{ data.quizzes }}</span></td>
+                            <td><span class="badge bg-info">{{ data.discussions }}</span></td>
+                            <td>
+                                <span class="badge bg-{% if data.attendance >= 75 %}success{% elif data.attendance >= 50 %}warning{% else %}danger{% endif %}">
+                                    {{ data.attendance|floatformat:1 }}%
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No participation data available</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
