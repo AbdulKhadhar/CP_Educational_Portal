@@ -113,6 +113,19 @@ class QuizAttempt(models.Model):
         self.save()
         return self.score
     
+    def is_passed(self):
+        """Checks if the quiz attempt's score meets the passing mark percentage."""
+        if self.percentage is None:
+            # Recalculate if score/percentage is missing (should not happen before submission)
+            self.calculate_score()
+            
+        # Ensure the related quiz is accessible and has a passing mark defined
+        passing_percentage = self.quiz.passing_marks
+        
+        # Compare the attempt's calculated percentage with the quiz's passing mark
+        # We use DecimalField, so comparison is straightforward.
+        return self.percentage >= passing_percentage
+    
     class Meta:
         ordering = ['-started_at']
         unique_together = ['quiz', 'student', 'attempt_number']

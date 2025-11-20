@@ -6,45 +6,88 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.db.models import Avg, Count
 from .models import Quiz, QuizQuestion, QuizOption, QuizAttempt, QuizAnswer, QuizResult
-from colleges.models import ClassSection, Student
+from colleges.models import ClassSection, Enrollment, Student
 from .forms import QuizForm, QuizQuestionForm, QuizOptionForm
 from django.db import models
 
 @login_required
 def quiz_list(request):
-    """List all quizzes"""
     user = request.user
-    
-    if user.role == 'teacher':
-        quizzes = Quiz.objects.filter(
-            section__teacher=user
-        ).select_related('section__course')
-    elif user.role == 'student':
-        try:
-            student = Student.objects.get(user=user)
-            quizzes = Quiz.objects.filter(
-                section__enrollments__student=student,
-                is_active=True
-            ).select_related('section__course')
-        except Student.DoesNotExist:
-            quizzes = Quiz.objects.none()
-    else:
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    # Separate into upcoming and past
     now = timezone.now()
-    upcoming = quizzes.filter(start_time__gt=now)
-    available = quizzes.filter(start_time__lte=now, end_time__gte=now)
-    past = quizzes.filter(end_time__lt=now)
     
-    context = {
-        'upcoming_quizzes': upcoming,
-        'available_quizzes': available,
-        'past_quizzes': past,
-    }
-    
-    return render(request, 'quizzes/quiz_list.html', context)
+    # Initialize context dictionaries
+    context = {}
+
+    if user.role == 'student':
+        # --- LOGIC FOR STUDENTS ---
+        try:
+            # Check for the student profile associated with the user
+            student = Student.objects.get(user=user)
+        except Student.DoesNotExist:
+            # Fallback if student profile is missing
+            return render(request, 'quizzes/quiz_list.html', {'available_quizzes': [], 'upcoming_quizzes': []})
+
+        # 1. Get the IDs of all sections the student is enrolled in
+        enrolled_section_ids = Enrollment.objects.filter(
+            student=student, 
+            is_active=True
+        ).values_list('section_id', flat=True) # FIX: Uses 'section_id'
+
+        # 2. Filter Quizzes for the student's enrolled sections
+        all_quizzes_for_student = Quiz.objects.filter(
+            section_id__in=enrolled_section_ids,
+            is_active=True
+        ).select_related('section', 'section__course').order_by('start_time')
+
+        # 3. Categorize Quizzes by time for students
+        context['available_quizzes'] = all_quizzes_for_student.filter(
+            start_time__lte=now,
+            end_time__gte=now
+        )
+
+        context['upcoming_quizzes'] = all_quizzes_for_student.filter(
+            start_time__gt=now
+        )
+        
+        # Use the student template
+        template_name = 'quizzes/quiz_list.html'
+
+    elif user.role == 'teacher':
+        # --- LOGIC FOR TEACHERS ---
+        
+        # 1. Get all Quizzes created by the logged-in teacher
+        teacher_quizzes = Quiz.objects.filter(
+            created_by=user
+        ).select_related('section', 'section__course').order_by('-start_time')
+        
+        # 2. Categorize Quizzes for the teacher's management view
+        
+        # Active: Currently running
+        context['active_quizzes'] = teacher_quizzes.filter(
+            start_time__lte=now,
+            end_time__gte=now,
+            is_active=True
+        )
+        
+        # Upcoming: Scheduled for the future
+        context['upcoming_quizzes'] = teacher_quizzes.filter(
+            start_time__gt=now,
+            is_active=True
+        )
+        
+        # Past: Has finished
+        context['past_quizzes'] = teacher_quizzes.filter(
+            end_time__lt=now
+        )
+        
+        # Use the teacher template
+        template_name = 'quizzes/teacher_quiz_list.html'
+        
+    else:
+        # Handle other roles or unassigned users
+        return redirect('dashboard') # Or any appropriate fallback page
+
+    return render(request, template_name, context)
 
 @login_required
 def quiz_create(request, section_id):
@@ -168,18 +211,22 @@ def add_question(request, quiz_id):
     
     quiz = get_object_or_404(Quiz, id=quiz_id, section__teacher=request.user)
     
+    # Initialize post_data to be empty for GET requests
+    post_data = {} 
+
     if request.method == 'POST':
         form = QuizQuestionForm(request.POST)
         if form.is_valid():
+            # --- Logic to save Question ---
             question = form.save(commit=False)
             question.quiz = quiz
-            question.order = quiz.questions.count() + 1
+            # Ensure order is set correctly
+            question.order = quiz.questions.aggregate(models.Max('order'))['order__max'] or 0 + 1
             question.save()
             
-            # Get number of options to create
+            # --- Logic to save Options ---
             num_options = int(request.POST.get('num_options', 4))
             
-            # Create options
             for i in range(num_options):
                 option_text = request.POST.get(f'option_{i}')
                 is_correct = request.POST.get(f'is_correct_{i}') == 'on'
@@ -189,24 +236,30 @@ def add_question(request, quiz_id):
                         question=question,
                         option_text=option_text,
                         is_correct=is_correct,
-                        order=i+1
+                        order=i + 1
                     )
             
             messages.success(request, 'Question added successfully!')
             
+            # If "Add & Create Another" was clicked
             if request.POST.get('add_another'):
                 return redirect('add_question', quiz_id=quiz.id)
             else:
                 return redirect('quiz_detail', quiz_id=quiz.id)
+        else:
+            # If form is invalid, capture the POST data for re-rendering options
+            post_data = request.POST
+            messages.error(request, 'There were errors in the question form.')
     else:
         form = QuizQuestionForm()
     
-    questions = quiz.questions.all()
+    questions = quiz.questions.all().order_by('order')
     
     return render(request, 'quizzes/add_question.html', {
         'form': form,
         'quiz': quiz,
         'questions': questions,
+        'post_data': post_data, # Passed back to template for retaining option values
     })
 
 @login_required
@@ -330,7 +383,7 @@ def take_quiz(request, quiz_id):
 
 @login_required
 def submit_quiz(request, attempt_id):
-    """Submit quiz answers"""
+    """Submit quiz answers, calculate score, and create result."""
     if request.user.role != 'student':
         messages.error(request, 'Access denied.')
         return redirect('dashboard')
@@ -342,42 +395,51 @@ def submit_quiz(request, attempt_id):
         return redirect('quiz_result', attempt_id=attempt.id)
     
     if request.method == 'POST':
-        # Save answers
+        # -----------------------------------------------------------
+        # 1. SAVE ANSWERS AND INITIAL GRADE (MCQ/True-False)
+        # -----------------------------------------------------------
         for question in attempt.quiz.questions.all():
             answer_key = f'question_{question.id}'
             
-            if question.question_type in ['mcq', 'true_false']:
-                selected_option_id = request.POST.get(answer_key)
-                if selected_option_id:
-                    answer, created = QuizAnswer.objects.get_or_create(
-                        attempt=attempt,
-                        question=question
-                    )
-                    answer.selected_options.clear()
-                    answer.selected_options.add(selected_option_id)
-                    answer.check_answer()
-            
-            elif question.question_type == 'multiple':
-                selected_options = request.POST.getlist(answer_key)
+            if question.question_type in ['mcq', 'true_false', 'multiple']:
+                # Handle single-select (mcq/true_false) and multi-select (multiple)
+                selected_options = request.POST.getlist(answer_key) if question.question_type == 'multiple' else [request.POST.get(answer_key)]
+                
+                # Filter out None/empty strings
+                selected_options = [opt for opt in selected_options if opt]
+
                 if selected_options:
                     answer, created = QuizAnswer.objects.get_or_create(
                         attempt=attempt,
                         question=question
                     )
+                    # Clear and set selected options
                     answer.selected_options.clear()
                     answer.selected_options.set(selected_options)
-                    answer.check_answer()
-            
+                    
+                    # Grade the objective question immediately
+                    answer.check_answer() 
+
             elif question.question_type == 'short':
+                # Handle Short Answer
                 text_answer = request.POST.get(answer_key)
-                if text_answer:
-                    QuizAnswer.objects.update_or_create(
-                        attempt=attempt,
-                        question=question,
-                        defaults={'text_answer': text_answer}
-                    )
+                
+                # Note: Short answers are marked incorrect/0 marks initially, requiring manual grading.
+                QuizAnswer.objects.update_or_create(
+                    attempt=attempt,
+                    question=question,
+                    defaults={
+                        'text_answer': text_answer,
+                        'is_correct': False, # Assume incorrect until manually graded
+                        'marks_awarded': 0
+                    }
+                )
         
-        # Calculate score
+        # -----------------------------------------------------------
+        # 2. FINALIZE ATTEMPT & CALCULATE SCORE
+        # -----------------------------------------------------------
+        
+        # Set final submission status and time
         attempt.status = 'submitted'
         attempt.submitted_at = timezone.now()
         
@@ -385,23 +447,39 @@ def submit_quiz(request, attempt_id):
         time_taken = (attempt.submitted_at - attempt.started_at).total_seconds() / 60
         attempt.time_taken_minutes = int(time_taken)
         
-        attempt.save()
+        # Calculate final score and percentage (updates attempt.score and attempt.percentage in memory)
         attempt.calculate_score()
         
-        # Create result
-        QuizResult.objects.create(
-            attempt=attempt,
+        # *** FIX: Save the updated score, percentage, and submission details to the database ***
+        attempt.save() 
+        
+        # -----------------------------------------------------------
+        # 3. CREATE QUIZ RESULT
+        # -----------------------------------------------------------
+        
+        # Find the enrollment object needed for the QuizResult model
+        enrollment = Enrollment.objects.filter(
             student=attempt.student,
-            quiz=attempt.quiz,
-            score=attempt.score,
-            percentage=attempt.percentage,
-            passed=attempt.is_passed()
-        )
+            section=attempt.quiz.section, # <-- CORRECTED FIELD NAME
+        ).first()
+        
+        # Create result (Check for existence to avoid duplicates on retries/double post)
+        if not QuizResult.objects.filter(attempt=attempt).exists():
+            QuizResult.objects.create(
+                attempt=attempt,
+                student=attempt.student,
+                enrollment=enrollment, 
+                quiz=attempt.quiz,
+                score=attempt.score,
+                percentage=attempt.percentage,
+                passed=attempt.is_passed() 
+            )
         
         messages.success(request, 'Quiz submitted successfully!')
         return redirect('quiz_result', attempt_id=attempt.id)
     
     return redirect('take_quiz', quiz_id=attempt.quiz.id)
+
 
 @login_required
 def quiz_result(request, attempt_id):

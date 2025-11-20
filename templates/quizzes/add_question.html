@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
 
 {% block title %}Add Question{% endblock %}
 {% block page_title %}Add Question to {{ quiz.title }}{% endblock %}
@@ -17,26 +19,29 @@
                             <label class="form-label">{{ field.label }}</label>
                             {{ field }}
                             {% if field.errors %}
-                            <div class="text-danger">{{ field.errors }}</div>
+                            <div class="text-danger small mt-1">{{ field.errors }}</div>
                             {% endif %}
                         </div>
                         {% endfor %}
                         
                         <hr>
                         <h6>Answer Options</h6>
-                        <p class="text-muted">Add 2-6 options. Check the correct answer(s).</p>
+                        <p class="text-muted">Add 2-6 options. Check the box for the correct answer(s).</p>
                         
                         <input type="hidden" name="num_options" value="4">
                         
                         {% for i in "0123" %}
                         <div class="row mb-2">
-                            <div class="col-md-1">
+                            <div class="col-md-1 d-flex align-items-center justify-content-center">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="is_correct_{{ i }}" id="check{{ i }}">
+                                    <input class="form-check-input" type="checkbox" name="is_correct_{{ i }}" id="check{{ i }}"
+                                           {% if post_data.is_correct_|add:i == 'on' %}checked{% endif %}>
                                 </div>
                             </div>
                             <div class="col-md-11">
-                                <input type="text" name="option_{{ i }}" class="form-control" placeholder="Option {{ i|add:1 }}" required>
+                                <input type="text" name="option_{{ i }}" class="form-control" 
+                                       placeholder="Option {{ forloop.counter }}" required
+                                       value="{{ post_data.option_|add:i }}">
                             </div>
                         </div>
                         {% endfor %}
@@ -64,9 +69,15 @@
                 <div class="card-body">
                     <div class="list-group">
                         {% for question in questions %}
-                        <div class="list-group-item">
-                            <strong>Q{{ question.order }}:</strong> {{ question.question_text }}
-                            <span class="badge bg-info ms-2">{{ question.marks }} marks</span>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Q{{ question.order }}:</strong> {{ question.question_text }}
+                                <span class="badge bg-info ms-2">{{ question.marks }} marks</span>
+                            </div>
+                            <div>
+                                <a href="{% url 'edit_question' question.id %}" class="btn btn-sm btn-warning">Edit</a>
+                                <a href="{% url 'delete_question' question.id %}" class="btn btn-sm btn-danger">Delete</a>
+                            </div>
                         </div>
                         {% endfor %}
                     </div>

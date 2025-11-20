@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Question{% endblock %}
+{% block page_title %}Edit Question to {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                            <div class="text-danger">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        <hr>
+                        <h6>Answer Options</h6>
+                        
+                        {% for option in question.options.all %}
+                        <div class="row mb-2">
+                            <div class="col-md-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           name="is_correct_{{ forloop.counter0 }}" id="check{{ forloop.counter0 }}"
+                                           {% if option.is_correct %}checked{% endif %}>
+                                </div>
+                            </div>
+                            <div class="col-md-11">
+                                <input type="text" name="option_{{ forloop.counter0 }}" class="form-control" 
+                                       placeholder="Option {{ forloop.counter }}" required value="{{ option.option_text }}">
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <div class="alert alert-info mt-3">
+                            Currently, this form only allows editing **existing** options. To add or remove options, 
+                            you would need to manage them manually or use a FormSet.
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'quiz_detail' quiz.id %}" class="btn btn-secondary">Back</a>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
